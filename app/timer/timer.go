@@ -1,0 +1,5 @@
+package timer
+
+import (
+  "time"
+)
