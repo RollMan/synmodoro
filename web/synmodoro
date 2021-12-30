@@ -37,6 +37,6 @@ server {
 
   location / {
         client_max_body_size 50M;
-        root /synmodoro/html;
+        root /synmodoro/synmodoro/public;
   }
 }

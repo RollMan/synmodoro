@@ -26,6 +26,10 @@ services:
       - "8002:8080"
     env_file:
       ./.env
+    volumes:
+      - type: bind
+        source: "./web/html/synmodoro"
+        target: "/synmodoro/synmodoro"
 
 volumes:
   db-data:

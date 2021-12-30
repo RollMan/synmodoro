@@ -29,3 +29,6 @@ identifier = "example"
 name = "example.org"
 url = "https://example.org"
 
+
+[markup.goldmark.rendere]
+unsafe = true
