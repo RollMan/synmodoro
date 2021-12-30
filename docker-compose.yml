@@ -4,8 +4,6 @@ services:
     env_file:
       ./.env
     build: ./app
-    ports:
-      - "8001:80"
     entrypoint:
       - /goapp/app
 
@@ -21,6 +19,13 @@ services:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_DATABASE=synmodoro
       # Specify the above two passwords in `.env` file.
+
+  web:
+    build: ./web
+    ports:
+      - "8002:8080"
+    env_file:
+      ./.env
 
 volumes:
   db-data:
