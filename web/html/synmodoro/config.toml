@@ -1,0 +1,31 @@
+baseURL = 'http://synmodoro.coppelab.net/'
+languageCode = 'en-us'
+title = 'Synmodoro'
+
+theme = "PaperMod"
+
+[[params.socialIcons]]
+name = "twitter"
+url = "https://twitter.com/rollman054"
+
+[[params.socialIcons]]
+name = "github"
+url = "https://github.com/RollMan"
+
+[[menu.main]]
+identifier = "categories"
+name = "categories"
+url = "/categories/"
+weight = 10
+
+[[menu.main]]
+identifier = "tags"
+name = "tags"
+url = "/tags/"
+weight = 20
+
+[[menu.main]]
+identifier = "example"
+name = "example.org"
+url = "https://example.org"
+
