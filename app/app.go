@@ -25,5 +25,6 @@ func main(){
   r := mux.NewRouter()
 
   r.HandleFunc("/api/start", apiHandlers.StartTimerHandler).Methods("POST")
+  r.HandleFunc("/api/state", apiHandlers.StateHandler).Methods("GET")
   log.Fatal(http.ListenAndServe(":80", r))
 }

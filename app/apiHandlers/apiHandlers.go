@@ -8,9 +8,11 @@ import (
   "log"
   "errors"
   "database/sql"
+  "encoding/json"
+  "strconv"
 )
 
-func StartTimerHandler(w http.ResponseWriter, r *http.Request) {
+func currentTimerStatus() (*db.Timer, error){
   var err error
   leftTime := &db.Timer{}
 
@@ -20,15 +22,23 @@ func StartTimerHandler(w http.ResponseWriter, r *http.Request) {
       leftTime = &db.Timer{0, 0, false}
       err = db.DbMap.Insert(leftTime)
       if err != nil {
+        return nil, err
+      }
+    }else{
+      return nil, err
+    }
+  }
+  return leftTime, nil
+}
+
+func StartTimerHandler(w http.ResponseWriter, r *http.Request) {
+  var err error
+
+  leftTime, err := currentTimerStatus()
+  if err != nil {
         log.Println(err)
         w.WriteHeader(http.StatusInternalServerError)
         return
-      }
-    }else{
-      log.Println(err)
-      w.WriteHeader(http.StatusInternalServerError)
-      return
-    }
   }
 
   if !leftTime.IsEnded() {
@@ -62,4 +72,46 @@ func StartTimerHandler(w http.ResponseWriter, r *http.Request) {
   w.WriteHeader(http.StatusOK)
   io.WriteString(w, fmt.Sprintln(leftTime))
   return
+}
+
+func StateHandler(w http.ResponseWriter, r *http.Request) {
+  var err error
+  leftTime, err := currentTimerStatus()
+  if err != nil {
+        log.Println(err)
+        w.WriteHeader(http.StatusInternalServerError)
+        return
+  }
+
+  var currentPhaseName string
+  if leftTime.IsBreak {
+    if leftTime.IsEnded(){
+      currentPhaseName = "work"
+    }else{
+      currentPhaseName = "break"
+    }
+  }else{
+    if leftTime.IsEnded(){
+      currentPhaseName = "break"
+    }else{
+      currentPhaseName = "work"
+    }
+  }
+
+  response_map := map[string]string {
+    "Id"               : strconv.FormatUint(leftTime.Id, 10),
+    "EndTimeUnixSec"   : strconv.FormatInt(leftTime.EndTimeUnixSec, 10),
+    "Status"          : currentPhaseName,
+  }
+
+  response, err := json.Marshal(response_map)
+  if err != nil {
+        log.Println(err)
+        w.WriteHeader(http.StatusInternalServerError)
+        return
+  }
+
+  w.Header().Set("Content-Type", "text/json; charset=utf-8")
+  w.WriteHeader(http.StatusOK)
+  io.WriteString(w, string(response))
 }
