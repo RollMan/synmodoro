@@ -58,6 +58,16 @@ function onClick() {
   });
 }
 
+function onError(event){
+  console.log("WS Connection Error.");
+  console.log(event);
+}
+
+function onClose(event){
+  console.log("WS Connection Closed.");
+  console.log(event);
+}
+
 window.onload = function(){
   fetch(stateuri).then(response => response.text()).then(response=> {
     const statestr = response;
@@ -71,8 +81,8 @@ window.onload = function(){
     connection = new WebSocket(wsurl);
     connection.onopen = onOpen;
     connection.onmessage = onMessage;
-    // connection.onerror = onError;
-    // connection.onclose = onClose;
+    connection.onerror = onError;
+    connection.onclose = onClose;
 
     type_button.onclick = onClick;
   });

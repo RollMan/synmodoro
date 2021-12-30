@@ -11,3 +11,6 @@
 #timerbutton:hover{
   opacity: 0.8;
 }
+#timer{
+  font-size: 160px;
+}
