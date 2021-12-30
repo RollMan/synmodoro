@@ -5,6 +5,7 @@ import (
   "io"
   "net/http"
   "github.com/RollMan/synmodoro/app/db"
+  "github.com/RollMan/synmodoro/app/ws"
   "log"
   "errors"
   "database/sql"
@@ -31,7 +32,39 @@ func currentTimerStatus() (*db.Timer, error){
   return leftTime, nil
 }
 
-func StartTimerHandler(w http.ResponseWriter, r *http.Request) {
+func stateResponse() ([]byte, error) {
+  var err error
+  leftTime, err := currentTimerStatus()
+  if err != nil {
+    return nil, err
+  }
+
+  var currentPhaseName string
+  if leftTime.IsBreak {
+    if leftTime.IsEnded(){
+      currentPhaseName = "work"
+    }else{
+      currentPhaseName = "break"
+    }
+  }else{
+    if leftTime.IsEnded(){
+      currentPhaseName = "break"
+    }else{
+      currentPhaseName = "work"
+    }
+  }
+
+  response_map := map[string]string {
+    "Id"               : strconv.FormatUint(leftTime.Id, 10),
+    "EndTimeUnixSec"   : strconv.FormatInt(leftTime.EndTimeUnixSec, 10),
+    "Status"          : currentPhaseName,
+  }
+
+  response, err := json.Marshal(response_map)
+  return response, err
+}
+
+func StartTimerHandler(hub *ws.Hub, w http.ResponseWriter, r *http.Request) {
   var err error
 
   leftTime, err := currentTimerStatus()
@@ -71,40 +104,21 @@ func StartTimerHandler(w http.ResponseWriter, r *http.Request) {
   }
   w.WriteHeader(http.StatusOK)
   io.WriteString(w, fmt.Sprintln(leftTime))
+
+  // Send timer start message via websocket
+  response, err := stateResponse()
+  if err != nil {
+    log.Println(err)
+    w.WriteHeader(http.StatusInternalServerError)
+    return
+  }
+  hub.Broadcast <- response
   return
 }
 
 func StateHandler(w http.ResponseWriter, r *http.Request) {
   var err error
-  leftTime, err := currentTimerStatus()
-  if err != nil {
-        log.Println(err)
-        w.WriteHeader(http.StatusInternalServerError)
-        return
-  }
-
-  var currentPhaseName string
-  if leftTime.IsBreak {
-    if leftTime.IsEnded(){
-      currentPhaseName = "work"
-    }else{
-      currentPhaseName = "break"
-    }
-  }else{
-    if leftTime.IsEnded(){
-      currentPhaseName = "break"
-    }else{
-      currentPhaseName = "work"
-    }
-  }
-
-  response_map := map[string]string {
-    "Id"               : strconv.FormatUint(leftTime.Id, 10),
-    "EndTimeUnixSec"   : strconv.FormatInt(leftTime.EndTimeUnixSec, 10),
-    "Status"          : currentPhaseName,
-  }
-
-  response, err := json.Marshal(response_map)
+  response, err := stateResponse()
   if err != nil {
         log.Println(err)
         w.WriteHeader(http.StatusInternalServerError)
