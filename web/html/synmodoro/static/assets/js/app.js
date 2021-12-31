@@ -86,6 +86,20 @@ window.onload = function(){
 
     type_button.onclick = onClick;
   });
+
+  // Notification configuration
+  if ("Notification" in window){
+    let permission = Notification.permission;
+
+    if (permission == "denied" || permission == "granted") {
+      return;
+    }
+
+    Notification.requestPermission()
+    .then(function(){
+      let notification = new Notification("Notification enabled!");
+    });
+  }
 }
 
 
