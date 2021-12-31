@@ -1,4 +1,5 @@
 #timerbutton{
+  text-align: center;
   margin: 30px auto;
   width: 180px;
   border-radius: 5px;
@@ -12,5 +13,28 @@
   opacity: 0.8;
 }
 #timer{
+  text-align: center;
   font-size: 160px;
+}
+
+#type{
+  text-align: center;
+}
+
+.inactive{  
+  position:absolute;
+  top:0px;
+  width:100%;
+  height:0;  
+  box-sizing:border-box;
+  color:white;  
+  text-align:center;
+  background:rgba(0,0,0,.6);
+  overflow:hidden;
+  box-sizing:border-box;
+  transition:height .2s;
+}
+
+.active{  
+  height:50px;
 }
