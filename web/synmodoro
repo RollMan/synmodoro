@@ -7,16 +7,18 @@ map $http_x_forwarded_proto $proxy_x_forwarded_proto {
 
 server {
   listen 8002;
+  port_in_redirect off;
 
   location /api/ws {
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
         client_max_body_size 50M;
         proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $proxy_x_forwarded_proto;
         proxy_set_header X-Frame-Options SAMEORIGIN;
+        proxy_http_version 1.1;  # recommended with keepalive connections - http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_http_version
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
         proxy_buffers 256 16k;
         proxy_buffer_size 16k;
         proxy_read_timeout 600s;
@@ -27,8 +29,6 @@ server {
         client_max_body_size 50M;
         proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $proxy_x_forwarded_proto;
         proxy_buffers 256 16k;
         proxy_buffer_size 16k;
         proxy_read_timeout 600s;
