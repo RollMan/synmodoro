@@ -23,7 +23,7 @@ services:
   web:
     build: ./web
     ports:
-      - "8002:8080"
+      - "8002:8002"
     env_file:
       ./.env
     volumes:

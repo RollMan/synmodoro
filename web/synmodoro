@@ -6,7 +6,7 @@ map $http_x_forwarded_proto $proxy_x_forwarded_proto {
 }
 
 server {
-  listen 8080;
+  listen 8002;
 
   location /api/ws {
         proxy_set_header Upgrade $http_upgrade;

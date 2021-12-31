@@ -38,3 +38,11 @@
 .active{  
   height:50px;
 }
+
+.bottom-margin {
+  margin-bottom: 50vh;
+}
+
+h2 {
+  margin-bottom: 30px;
+}
