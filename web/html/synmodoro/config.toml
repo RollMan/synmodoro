@@ -3,3 +3,6 @@ languageCode = 'ja-jp'
 title = 'Synmodoro'
 
 theme = "PaperMod"
+
+[params]
+description = "Synchronize your pomodoro timer with your mates."
