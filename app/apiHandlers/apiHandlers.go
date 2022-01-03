@@ -3,6 +3,7 @@ package apiHandlers
 import (
   "fmt"
   "io"
+  "bytes"
   "net/http"
   "github.com/RollMan/synmodoro/app/db"
   "github.com/RollMan/synmodoro/app/ws"
@@ -125,6 +126,80 @@ func StateHandler(w http.ResponseWriter, r *http.Request) {
         return
   }
 
+  w.Header().Set("Content-Type", "text/json; charset=utf-8")
+  w.WriteHeader(http.StatusOK)
+  io.WriteString(w, string(response))
+}
+
+func RegisterHandler(hub *ws.Hub, w http.ResponseWriter, r *http.Request){
+  type updateName struct {
+    prevName  string
+    newName string
+  }
+
+  var err error
+  // Read body
+  bodybuf := r.Body
+  defer bodybuf.Close()
+  buf := new(bytes.Buffer)
+  _, err = buf.ReadFrom(bodybuf)
+  if err != nil {
+    log.Println("Failed to read request body.")
+    log.Println(err)
+    w.WriteHeader(http.StatusInternalServerError)
+    return
+  }
+  jsonbyte := buf.Bytes()
+  var requestJson updateName
+  err = json.Unmarshal(jsonbyte, &requestJson)
+  if err != nil {
+    log.Println("Failed to parse WS request body.")
+    log.Println(err)
+    w.WriteHeader(http.StatusInternalServerError)
+    return
+  }
+
+  prev_name := requestJson.prevName
+  new_name := requestJson.newName
+
+  isFound := false
+  for k, v := range hub.GetClients() {
+    if v && k.Username == prev_name{
+      isFound = true
+      k.Username = new_name
+      break
+    }
+  }
+
+  if isFound == false {
+    log.Println("No such client is connected via WS: " + prev_name)
+    w.WriteHeader(http.StatusBadRequest)
+    return
+  }
+
+  // send ws message with mates list
+  response, err := hub.CreateMatesJson()
+  if err != nil {
+    w.WriteHeader(http.StatusInternalServerError)
+    log.Println("Failed to parse json of mates.")
+    log.Println(err)
+    return
+  }
+
+  hub.Broadcast <- response
+
+  w.Header().Set("Content-Type", "text/json; charset=utf-8")
+  w.WriteHeader(http.StatusOK)
+}
+
+func GetMatesHandler(hub *ws.Hub, w http.ResponseWriter, r *http.Request) {
+  response, err := hub.CreateMatesJson()
+  if err != nil {
+    w.WriteHeader(http.StatusInternalServerError)
+    log.Println("Failed to parse json of mates.")
+    log.Println(err)
+    return
+  }
   w.Header().Set("Content-Type", "text/json; charset=utf-8")
   w.WriteHeader(http.StatusOK)
   io.WriteString(w, string(response))

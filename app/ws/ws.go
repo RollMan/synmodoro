@@ -5,6 +5,7 @@ import (
   "net/http"
   "time"
   "github.com/gorilla/websocket"
+  "encoding/json"
 )
 
 const (
@@ -77,11 +78,18 @@ func (h *Hub) Run() {
   }
 }
 
+func (h *Hub) GetClients() map[*Client]bool{
+  return h.clients
+}
+
 type Client struct {
   hub *Hub
 
   // The websocket connection.
   conn *websocket.Conn
+
+  // Username
+  Username string
 
   // Buffered channel of outbound messages.
   send chan []byte
@@ -125,14 +133,58 @@ func (c *Client) writePump() {
 
 }
 
+func (hub *Hub) CreateMatesJson() ([]byte, error) {
+  var err error
+  var mates []string = []string{}
+  for k, v := range hub.GetClients() {
+    if v {
+      mates = append(mates, k.Username)
+    }
+  }
+
+  jsonResponse := map[string]interface{} {"Mates": mates}
+  response, err := json.Marshal(jsonResponse)
+  if err != nil {
+    return nil, err
+  }
+  return response, nil
+}
+
+
 func WsHandler(hub *Hub, w http.ResponseWriter, r *http.Request) {
   conn, err := upgrader.Upgrade(w, r, nil)
   if err != nil {
     log.Println(err)
     return
   }
-  client := &Client{hub: hub, conn: conn, send: make(chan []byte)}
+
+  username, ok := r.URL.Query()["Username"];
+  if !ok {
+    w.WriteHeader(http.StatusBadRequest)
+    log.Println("Invalid query string for ws handler:")
+    for k, v := range r.URL.Query() {
+      log.Println(k, v)
+    }
+    return
+  }
+
+  if len(username) != 1 {
+    w.WriteHeader(http.StatusBadRequest)
+    log.Println("Invalid query string for ws handler: too many usernames " + string(len(username)))
+  }
+
+  client := &Client{hub: hub, conn: conn, send: make(chan []byte), Username: username[0]}
   client.hub.register <- client
+
+  response, err := hub.CreateMatesJson()
+  if err != nil {
+    w.WriteHeader(http.StatusInternalServerError)
+    log.Println("Failed to parse json of mates.")
+    log.Println(err)
+    return
+  }
+
+  hub.Broadcast <- response
 
   // Allow collection of memory referenced by the caller by doing all work in
   // new goroutines.

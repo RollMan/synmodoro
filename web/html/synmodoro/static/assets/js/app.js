@@ -4,11 +4,12 @@ var type_button = document.getElementById('timerbutton');
 var notify_elemenet = document.getElementById('notify');
 var mates_element = document.getElementById('mates');
 var editusername_element = document.getElementById('edit-username');
-var username = randomUserID()Z;
+var username = randomUserID();
 const wsurl = 'ws://' + window.location.host + '/api/ws';
 const stateuri = 'http://' + window.location.host + '/api/state';
 const starturi = 'http://' + window.location.host + '/api/start';
 const registeruri = 'http://' + window.location.host + '/api/register';
+const getmatesuri = 'http://' + window.location.host + '/api/get_mates';
 var request = new XMLHttpRequest();
 
 function parseState(statestr){
@@ -34,6 +35,7 @@ function randomUserID(){
   for ( var i = 0; i < len; i++ ) {
     rand_str += chars.charAt(Math.floor(Math.random() * chars.length));
   }
+  return rand_str
 }
 
 function registerName(){
@@ -50,10 +52,11 @@ function registerName(){
   }).then(response => {
     const ok = response.status;
     if(ok != 200){
-      const errmsg = await response.text();
-      console.log("Failed to register the username.");
-      console.log(errmsg);
-      showErrorMessage("Failed to register username: " + errmsg);
+      response.text().then(errmsg => {
+        console.log("Failed to register the username.");
+        console.log(errmsg);
+        showErrorMessage("Failed to register username: " + errmsg);
+      });
     }
   });
 
@@ -64,10 +67,25 @@ function onOpen(event){
   notify_elemenet.classList.remove('active');
 }
 
+function showMates(mates){
+    let html = ""
+    html += "<table>";
+    for (let i = 0; i < mates.length; i++) {
+      let mate = mates[i];
+      if (mate == username) {
+        html += "<tr><td>" + String(mate) + "<span id=\"edit-username\">&#9999</span></td></tr>";
+      }else{
+        html += "<tr><td>" + String(mate) + "</td></tr>";
+      }
+    }
+    html += "</table>";
+    mates_element.innerHTML = html;
+}
+
 function  onMessage(event) {
   notify_elemenet.classList.remove('active');
   const timerinfo = JSON.parse(event.data);
-  if (timerinfo.hasAttribute('timerinfo')){
+  if ('EndTimeUnixSec' in timerinfo){
     const endtimeunixsec = timerinfo.timerinfo.EndTimeUnixSec;
     const state = timerinfo.timerinfo.Status;
 
@@ -80,16 +98,8 @@ function  onMessage(event) {
         sound.play();
       }
     }, 1000);
-  }else if (timerinfo.hasAttribute('workingmates')){
-    const mates = timerinfo.workingmates.Mates;
-    mates_element.innerHTML = "<table>";
-    for (mate in elements) {
-      if (mate == username) {
-        mates_element.innerHTML = "<tr><td>" + mate + "<span id=\"edit-username\">&#9999</span></td></tr>";
-      }else{
-        mates_element.innerHTML = "<tr><td>" + mate + "</td></tr>";
-      }
-    }
+  }else if ('Mates' in timerinfo){
+    showMates(timerinfo.Mates);
   }else{
     console.log("Invalid websocket message.");
     console.log(timerinfo);
@@ -155,12 +165,13 @@ function registerUsername(event){
   }).then(response => {
     const ok = response.status;
     if (ok != 200){
-      const errmsg = await response.text();
-      console.log("Failed to register username.");
-      console.log(errmsg);
-      showErrorMessage("Failed to register username: " + errmsg);
+      response.text().then(errmsg => {
+        console.log("Failed to register username.");
+        console.log(errmsg);
+        showErrorMessage("Failed to register username: " + errmsg);
+      });
     }
-  }
+  });
 }
 
 window.onload = function(){
@@ -176,14 +187,21 @@ window.onload = function(){
         sound.play();
       }
     }, 1000);
-    connection = new WebSocket(wsurl);
+
+    // fetch(getmatesuri).then(response => response.json()).then(responseJson=>{
+    //   showMates(responseJson.Mates);
+    //   editusername_element = document.getElementById('edit-username');
+    //   editusername_element.onclick = registerUsername;
+    // });
+
+    const query = new URLSearchParams({Username: username});
+    connection = new WebSocket(wsurl + '?' + query);
     connection.onopen = onOpen;
     connection.onmessage = onMessage;
     connection.onerror = onError;
     connection.onclose = onClose;
 
     type_button.onclick = onClick;
-    editusername_element.onclick = registerUsername;
   });
 
   // Notification configuration
