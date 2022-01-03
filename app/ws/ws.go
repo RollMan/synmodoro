@@ -48,9 +48,9 @@ type Hub struct {
 
 func NewHub() *Hub {
   return &Hub{
-    Broadcast:  make(chan []byte),
-    register:   make(chan *Client),
-    unregister: make(chan *Client),
+    Broadcast:  make(chan []byte, 16),
+    register:   make(chan *Client, 16),
+    unregister: make(chan *Client, 16),
     clients:    make(map[*Client]bool),
   }
 }
@@ -60,16 +60,32 @@ func (h *Hub) Run() {
     select {
     case client := <-h.register:
       h.clients[client] = true
+      log.Println("====registered====")
+      log.Println(string(client.Username))
+
+      response, err := h.CreateMatesJson()
+      if err != nil {
+        log.Println("Failed to parse json of mates.")
+        log.Println(err)
+      }else{
+        log.Println("broadcasting")
+        h.Broadcast <- response
+      }
+
     case client := <-h.unregister:
       if _, ok := h.clients[client]; ok {
         delete(h.clients, client)
         close(client.send)
       }
     case message := <-h.Broadcast:
+      log.Println("===message===")
+      log.Printf("%T\n", message)
+      log.Println(string(message))
       for client := range h.clients {
         select {
         case client.send <- message:
         default:
+          log.Println("closing client")
           close(client.send)
           delete(h.clients, client)
         }
@@ -137,6 +153,8 @@ func (hub *Hub) CreateMatesJson() ([]byte, error) {
   var err error
   var mates []string = []string{}
   for k, v := range hub.GetClients() {
+    log.Println("==creating mates==")
+    log.Println(string(k.Username), v)
     if v {
       mates = append(mates, k.Username)
     }
@@ -173,18 +191,8 @@ func WsHandler(hub *Hub, w http.ResponseWriter, r *http.Request) {
     log.Println("Invalid query string for ws handler: too many usernames " + string(len(username)))
   }
 
-  client := &Client{hub: hub, conn: conn, send: make(chan []byte), Username: username[0]}
+  client := &Client{hub: hub, conn: conn, send: make(chan []byte, 16), Username: username[0]}
   client.hub.register <- client
-
-  response, err := hub.CreateMatesJson()
-  if err != nil {
-    w.WriteHeader(http.StatusInternalServerError)
-    log.Println("Failed to parse json of mates.")
-    log.Println(err)
-    return
-  }
-
-  hub.Broadcast <- response
 
   // Allow collection of memory referenced by the caller by doing all work in
   // new goroutines.
