@@ -5,4 +5,5 @@ title = 'Synmodoro'
 theme = "PaperMod"
 
 [params]
-description = "Synchronize your pomodoro timer with your mates."
+  description = "Synchronize your pomodoro timer with your mates."
+  discord = "https://discord.gg/VBbheacPk7"

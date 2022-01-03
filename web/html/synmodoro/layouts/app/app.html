@@ -31,6 +31,12 @@
 
   <div id="notify" class="inactive"></div>
 
+  {{ if isset .Site.Params "discord" }}
+  <div class="post-content">
+    <p>Join our <a href="{{ $.Site.Params.discord }}">discord</a> to share your progress and take a break togerther. Whoever comes will be welcomed!</p>
+  </div>
+  {{end}}
+
   <footer class="post-footer">
     {{- if .Params.tags }}
     <ul class="post-tags">
