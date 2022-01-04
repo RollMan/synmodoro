@@ -38,29 +38,29 @@ function randomUserID(){
   return rand_str
 }
 
-function registerName(){
-  fetch(registeruri, {
-    method: 'POST',
-    mode: 'cors',
-    cache: 'no-cache',
-    credentials: 'same-origin',
-    headers: {
-      'Content-Type': 'text/plain',
-    },
-    redirect: 'follow',
-    body: username,
-  }).then(response => {
-    const ok = response.status;
-    if(ok != 200){
-      response.text().then(errmsg => {
-        console.log("Failed to register the username.");
-        console.log(errmsg);
-        showErrorMessage("Failed to register username: " + errmsg);
-      });
-    }
-  });
-
-}
+// function registerName(){
+//   fetch(registeruri, {
+//     method: 'POST',
+//     mode: 'cors',
+//     cache: 'no-cache',
+//     credentials: 'same-origin',
+//     headers: {
+//       'Content-Type': 'text/plain',
+//     },
+//     redirect: 'follow',
+//     body: username,
+//   }).then(response => {
+//     const ok = response.status;
+//     if(ok != 200){
+//       response.text().then(errmsg => {
+//         console.log("Failed to register the username.");
+//         console.log(errmsg);
+//         showErrorMessage("Failed to register username: " + errmsg);
+//       });
+//     }
+//   });
+// 
+// }
 
 function onOpen(event){
   console.log("Connected.");
@@ -80,6 +80,9 @@ function showMates(mates){
     }
     html += "</table>";
     mates_element.innerHTML = html;
+
+    editusername_element = document.getElementById('edit-username');
+    editusername_element.onclick = registerUsername;
 }
 
 function  onMessage(event) {
@@ -152,26 +155,37 @@ function onClose(event){
 }
 
 function registerUsername(event){
-  fetch(registeruri, {
-    method: 'POST',
-    mode: 'cors',
-    cache: 'no-cache',
-    credentials: 'same-origin',
-    headers: {
-      'Content-Type': 'text/plain',
-    },
-    redirect: 'follow',
-    body: username,
-  }).then(response => {
-    const ok = response.status;
-    if (ok != 200){
-      response.text().then(errmsg => {
-        console.log("Failed to register username.");
-        console.log(errmsg);
-        showErrorMessage("Failed to register username: " + errmsg);
-      });
-    }
-  });
+  editusername_element.onclick = "";
+  editusername_element.innerHTML = "<input type=\"text\" id=\"newusername\"> <input type=\"submit\" id=\"submitusername\">";
+  var submitusername_element = document.getElementById("submitusername");
+  submitusername_element.onclick = function(event){
+    let newusername_element = document.getElementById("newusername");
+    let newusername = newusername_element.value;
+    let prevname = username;
+    let reqJson = {PrevName: prevname, NewName: newusername};
+    let reqJsonStr = JSON.stringify(reqJson);
+    fetch(registeruri, {
+      method: 'POST',
+      mode: 'cors',
+      cache: 'no-cache',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'text/plain',
+      },
+      redirect: 'follow',
+      body: reqJsonStr,
+    }).then(response => {
+      const ok = response.status;
+      if (ok != 200){
+        response.text().then(errmsg => {
+          console.log("Failed to register username.");
+          console.log(errmsg);
+          showErrorMessage("Failed to register username: " + errmsg);
+        });
+      }
+      username = newusername;
+    });
+  }
 }
 
 window.onload = function(){

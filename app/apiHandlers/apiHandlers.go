@@ -133,8 +133,8 @@ func StateHandler(w http.ResponseWriter, r *http.Request) {
 
 func RegisterHandler(hub *ws.Hub, w http.ResponseWriter, r *http.Request){
   type updateName struct {
-    prevName  string
-    newName string
+    PrevName  string
+    NewName string
   }
 
   var err error
@@ -150,6 +150,7 @@ func RegisterHandler(hub *ws.Hub, w http.ResponseWriter, r *http.Request){
     return
   }
   jsonbyte := buf.Bytes()
+  log.Println(string(jsonbyte))
   var requestJson updateName
   err = json.Unmarshal(jsonbyte, &requestJson)
   if err != nil {
@@ -159,11 +160,12 @@ func RegisterHandler(hub *ws.Hub, w http.ResponseWriter, r *http.Request){
     return
   }
 
-  prev_name := requestJson.prevName
-  new_name := requestJson.newName
+  prev_name := requestJson.PrevName
+  new_name := requestJson.NewName
 
   isFound := false
   for k, v := range hub.GetClients() {
+    log.Printf("v && k.Username == prev_name <== %t && %s == %s\n", v, k.Username, prev_name)
     if v && k.Username == prev_name{
       isFound = true
       k.Username = new_name
@@ -173,6 +175,7 @@ func RegisterHandler(hub *ws.Hub, w http.ResponseWriter, r *http.Request){
 
   if isFound == false {
     log.Println("No such client is connected via WS: " + prev_name)
+    log.Println(requestJson)
     w.WriteHeader(http.StatusBadRequest)
     return
   }
