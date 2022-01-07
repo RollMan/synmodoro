@@ -34,3 +34,7 @@ func (t Timer) Start() Timer {
   t.IsBreak = isBreak
   return t
 }
+
+type WSAttr struct {
+  Username string
+}

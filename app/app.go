@@ -35,5 +35,11 @@ func main(){
   r.HandleFunc("/api/ws", func(w http.ResponseWriter, r *http.Request){
     ws.WsHandler(hub, w, r)
   })
+  r.HandleFunc("/api/register", func(w http.ResponseWriter, r *http.Request){
+    apiHandlers.RegisterHandler(hub, w, r)
+  }).Methods("POST")
+  r.HandleFunc("/api/get_mates", func(w http.ResponseWriter, r *http.Request){
+    apiHandlers.GetMatesHandler(hub, w, r)
+  }).Methods("GET")
   log.Fatal(http.ListenAndServe(":80", r))
 }
