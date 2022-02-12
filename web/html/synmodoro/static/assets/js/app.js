@@ -2,9 +2,9 @@ var timer = document.getElementById('timer');
 var type = document.getElementById('type');
 var type_button = document.getElementById('timerbutton');
 var notify_elemenet = document.getElementById('notify');
-const wsurl = 'ws://' + window.location.host + '/api/ws';
-const stateuri = 'http://' + window.location.host + '/api/state';
-const starturi = 'http://' + window.location.host + '/api/start';
+const wsurl = 'wss://' + window.location.host + '/api/ws';
+const stateuri = 'https://' + window.location.host + '/api/state';
+const starturi = 'https://' + window.location.host + '/api/start';
 var request = new XMLHttpRequest();
 
 function parseState(statestr){

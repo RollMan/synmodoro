@@ -1,4 +1,4 @@
-baseURL = 'http://synmodoro.coppelab.net/'
+baseURL = 'https://synmodoro.coppelab.net/'
 languageCode = 'ja-jp'
 title = 'Synmodoro'
 
