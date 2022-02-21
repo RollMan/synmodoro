@@ -6,6 +6,9 @@ const wsurl = 'wss://' + window.location.host + '/api/ws';
 const stateuri = 'https://' + window.location.host + '/api/state';
 const starturi = 'https://' + window.location.host + '/api/start';
 var request = new XMLHttpRequest();
+const sound = new Audio("/sound/chaim.mp3");
+const sound_slider = document.getElementById('volume')
+const volume_check_button = document.getElementById('volumecheck')
 
 function parseState(statestr){
   const timerinfo = JSON.parse(statestr);
@@ -39,7 +42,6 @@ function  onMessage(event) {
     if(diff <= 0) {
       clearInterval(interval);
       const notification = new Notification("Finish " + state);
-      const sound = new Audio("/sound/chaim.mp3");
       sound.play();
     }
   }, 1000);
@@ -89,7 +91,20 @@ function onClose(event){
   showErrorMessage(event);
 }
 
+function volumeSliderHandler(e){
+  sound.volume = sound_slider.value;
+}
+
+function volumeCheckButtonHandler(e){
+  sound.pause();
+  sound.currentTime=0.0;
+  sound.play();
+}
+
 window.onload = function(){
+  sound.volume = sound_slider.value;
+  sound_slider.addEventListener("input", volumeSliderHandler);
+  volume_check_button.addEventListener("click", volumeCheckButtonHandler);
   fetch(stateuri).then(response => response.text()).then(response=> {
     const statestr = response;
     const state = parseState(statestr);
@@ -98,7 +113,6 @@ window.onload = function(){
       if(diff <= 0) {
         clearInterval(interval);
         const notification = new Notification("Finish " + state);
-        const sound = new Audio("/sound/chaim.mp3");
         sound.play();
       }
     }, 1000);
